@@ -37,6 +37,8 @@ crons = ["0 9 * * MON"]
 
 Cloudflare Cron Triggers run on UTC time. `0 9 * * MON` means every Monday at 09:00 UTC, which is Monday 14:30 IST.
 
+The scheduled cron path defaults to `2` Retool triggers per Worker invocation. This keeps the run below Cloudflare's 15-minute Cron Trigger wall-time limit when live Retool batches take around 5-6 minutes each.
+
 Retool decides whether to process a batch, skip because another batch is running, or skip because today's campaign is already done.
 
 ## Cloudflare Dashboard Setup
@@ -114,7 +116,7 @@ This runs the same Retool trigger as the scheduled cron handler, with:
 }
 ```
 
-The Worker calls Retool sequentially until Retool says there is no more work, or until `maxTriggers` is reached. The maximum allowed value is `20`.
+The Worker calls Retool sequentially until Retool says there is no more work, or until `maxTriggers` is reached. Manual triggers default to `20`, and the maximum allowed value is `20`.
 
 The Worker does not bypass Retool's lock/state logic. If the Retool job is already running or already done for the campaign date, Retool should return:
 
@@ -162,5 +164,7 @@ If Retool does not run a webhook return block, the Worker cannot know that all b
 
 - Do not trigger many Retool workflow runs in parallel.
 - Keep the Worker as a single cron caller.
+- Cron invocations should stay at 1-2 Retool batches because Cloudflare Cron Triggers have a 15-minute wall-time limit.
+- Manual invocations can request up to 20 batches, but only use high values when someone is watching the run and the HTTP connection can stay open.
 - Adjust `workflow_job_state.batch_size` in RetoolDB if Retool runs are taking too long.
 - If Retool returns errors or times out, check Retool workflow logs first, then Cloudflare Worker logs.

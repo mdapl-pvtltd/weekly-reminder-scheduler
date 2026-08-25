@@ -29,4 +29,4 @@ Use [requests/manual-trigger.curl](/Users/pranav/Documents/MDAPL/weekly-reminder
 
 Set `WORKER_URL` to the deployed Cloudflare Worker URL, then send a `POST` request. The Worker will call the Retool workflow with `triggerSource: "manual"` and Retool will still enforce its own lock/state checks.
 
-By default, one Worker invocation drains up to 20 Retool batches sequentially. Pass a lower `maxTriggers` value in the manual request body when testing.
+Scheduled cron invocations drain up to 2 Retool batches by default to stay under Cloudflare's Cron Trigger duration limit. Manual invocations can request up to 20 batches by passing `maxTriggers`.
