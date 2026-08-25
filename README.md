@@ -28,3 +28,5 @@ See [CONFIGURATION.md](/Users/pranav/Documents/MDAPL/weekly-reminder-scheduler/C
 Use [requests/manual-trigger.curl](/Users/pranav/Documents/MDAPL/weekly-reminder-scheduler/requests/manual-trigger.curl) as a saved request template for Postman or curl.
 
 Set `WORKER_URL` to the deployed Cloudflare Worker URL, then send a `POST` request. The Worker will call the Retool workflow with `triggerSource: "manual"` and Retool will still enforce its own lock/state checks.
+
+By default, one Worker invocation drains up to 20 Retool batches sequentially. Pass a lower `maxTriggers` value in the manual request body when testing.

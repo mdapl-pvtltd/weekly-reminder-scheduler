@@ -1,6 +1,6 @@
 curl --request POST "${WORKER_URL}" \
   --header "Content-Type: application/json" \
   --data '{
-    "triggerSource": "manual"
+    "triggerSource": "manual",
+    "maxTriggers": 20
   }'
-
