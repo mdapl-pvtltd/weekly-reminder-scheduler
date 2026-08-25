@@ -32,10 +32,10 @@ or the JSON body field:
 The current cron in `wrangler.toml` is:
 
 ```toml
-crons = ["*/5 * * * *"]
+crons = ["0 9 * * MON"]
 ```
 
-That means Cloudflare calls Retool every 5 minutes.
+Cloudflare Cron Triggers run on UTC time. `0 9 * * MON` means every Monday at 09:00 UTC, which is Monday 14:30 IST.
 
 Retool decides whether to process a batch, skip because another batch is running, or skip because today's campaign is already done.
 
@@ -83,11 +83,46 @@ Typical Retool responses:
 
 The exact response body is not critical for the first version. RetoolDB remains the source of truth.
 
-## Manual Trigger
+## Manual Trigger Endpoint
 
-The Worker also supports a manual `POST` request to the Worker URL. This runs the same Retool trigger as the cron handler.
+The Worker supports manual one-time triggering through the Worker HTTP endpoint.
 
-Use this only for smoke testing.
+Send a `POST` request to the deployed Worker URL:
+
+```text
+POST https://<worker-name>.<account-subdomain>.workers.dev
+```
+
+A saved curl request is available at:
+
+```text
+requests/manual-trigger.curl
+```
+
+Set `WORKER_URL` before using it:
+
+```sh
+export WORKER_URL="https://<worker-name>.<account-subdomain>.workers.dev"
+```
+
+This runs the same Retool trigger as the scheduled cron handler, with:
+
+```json
+{
+  "triggerSource": "manual"
+}
+```
+
+The Worker does not bypass Retool's lock/state logic. If the Retool job is already running or already done for the campaign date, Retool should return:
+
+```json
+{
+  "status": "not_claimed",
+  "reason": "already_running_or_done"
+}
+```
+
+Use this for smoke testing, retries after fixing an issue, or a one-time operational run.
 
 ## Operational Notes
 
@@ -95,4 +130,3 @@ Use this only for smoke testing.
 - Keep the Worker as a single cron caller.
 - Adjust `workflow_job_state.batch_size` in RetoolDB if Retool runs are taking too long.
 - If Retool returns errors or times out, check Retool workflow logs first, then Cloudflare Worker logs.
-
