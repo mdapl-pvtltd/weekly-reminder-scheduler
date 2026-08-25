@@ -1,5 +1,7 @@
 const JOB_NAME = "weekly_outstanding_invoices";
-const DEFAULT_MAX_TRIGGERS = 20;
+const DEFAULT_CRON_MAX_TRIGGERS = 2;
+const DEFAULT_MANUAL_MAX_TRIGGERS = 20;
+const MAX_MANUAL_TRIGGERS = 20;
 const DEFAULT_DELAY_BETWEEN_TRIGGERS_MS = 1000;
 
 export default {
@@ -19,6 +21,7 @@ export default {
       drainRetoolBatches(env, "cron", {
         scheduledTime,
         cron: event.cron,
+        maxTriggers: DEFAULT_CRON_MAX_TRIGGERS,
       }),
     );
   },
@@ -41,7 +44,7 @@ export default {
     const requestBody = await readJsonRequestBody(request);
     const maxTriggers = toPositiveInteger(
       requestBody?.maxTriggers,
-      DEFAULT_MAX_TRIGGERS,
+      DEFAULT_MANUAL_MAX_TRIGGERS,
     );
 
     console.log("Manual trigger received", {
@@ -67,7 +70,9 @@ async function drainRetoolBatches(env, triggerSource, context = {}) {
   const drainId = crypto.randomUUID();
   const maxTriggers = toPositiveInteger(
     context.maxTriggers,
-    DEFAULT_MAX_TRIGGERS,
+    triggerSource === "cron"
+      ? DEFAULT_CRON_MAX_TRIGGERS
+      : DEFAULT_MANUAL_MAX_TRIGGERS,
   );
   const startedAt = new Date().toISOString();
   const startedAtMs = Date.now();
@@ -301,7 +306,7 @@ function toPositiveInteger(value, fallback) {
     return fallback;
   }
 
-  return Math.min(parsed, DEFAULT_MAX_TRIGGERS);
+  return Math.min(parsed, MAX_MANUAL_TRIGGERS);
 }
 
 function sleep(ms) {
