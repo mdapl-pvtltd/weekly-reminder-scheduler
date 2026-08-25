@@ -3,7 +3,7 @@ main = "src/index.js"
 compatibility_date = "2026-08-25"
 
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["0 9 * * MON"]
 
 [observability]
 enabled = false
