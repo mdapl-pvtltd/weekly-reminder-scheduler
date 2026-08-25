@@ -109,9 +109,12 @@ This runs the same Retool trigger as the scheduled cron handler, with:
 
 ```json
 {
-  "triggerSource": "manual"
+  "triggerSource": "manual",
+  "maxTriggers": 20
 }
 ```
+
+The Worker calls Retool sequentially until Retool says there is no more work, or until `maxTriggers` is reached. The maximum allowed value is `20`.
 
 The Worker does not bypass Retool's lock/state logic. If the Retool job is already running or already done for the campaign date, Retool should return:
 
@@ -123,6 +126,37 @@ The Worker does not bypass Retool's lock/state logic. If the Retool job is alrea
 ```
 
 Use this for smoke testing, retries after fixing an issue, or a one-time operational run.
+
+## Retool Webhook Return Contract
+
+For the Worker to stop before `maxTriggers`, Retool should have a webhook return block after `markJobSuccess`.
+
+Recommended response body:
+
+```json
+{
+  "status": "{{ markJobSuccess.data[0].status }}",
+  "batchCount": "{{ getAllRegularCustomersNonCD.data.length }}",
+  "lastDealerId": "{{ markJobSuccess.data[0].last_dealer_id }}",
+  "completedAt": "{{ markJobSuccess.data[0].completed_at }}"
+}
+```
+
+The Worker stops when Retool returns any of:
+
+```json
+{ "status": "done" }
+```
+
+```json
+{ "status": "not_claimed", "reason": "already_running_or_done" }
+```
+
+```json
+{ "done": true }
+```
+
+If Retool does not run a webhook return block, the Worker cannot know that all batches are exhausted and will keep triggering until `maxTriggers`.
 
 ## Operational Notes
 
