@@ -32,12 +32,12 @@ or the JSON body field:
 The current cron in `wrangler.toml` is:
 
 ```toml
-crons = ["0 9 * * MON"]
+crons = ["*/15 9-12 * * MON"]
 ```
 
-Cloudflare Cron Triggers run on UTC time. `0 9 * * MON` means every Monday at 09:00 UTC, which is Monday 14:30 IST.
+Cloudflare Cron Triggers run on UTC time. `*/15 9-12 * * MON` means every 15 minutes on Monday from 09:00 through 12:45 UTC, which is Monday 14:30 through 18:15 IST.
 
-The scheduled cron path defaults to `2` Retool triggers per Worker invocation. This keeps the run below Cloudflare's 15-minute Cron Trigger wall-time limit when live Retool batches take around 5-6 minutes each.
+The scheduled cron path defaults to `2` Retool triggers per Worker invocation. This keeps each invocation below Cloudflare's 15-minute Cron Trigger wall-time limit when live Retool batches take around 5-6 minutes each, while still allowing the full Monday window to drain many batches.
 
 Retool decides whether to process a batch, skip because another batch is running, or skip because today's campaign is already done.
 
